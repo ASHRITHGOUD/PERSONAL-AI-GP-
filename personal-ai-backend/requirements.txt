@@ -1,0 +1,9 @@
+fastapi
+uvicorn[standard]
+pymongo
+redis
+python-dotenv
+openai
+numpy
+scikit-learn
+celery
