@@ -1,6 +1,6 @@
-# routes/chat_routes.py
+#chat_routes.py
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
-from services.llm_service import get_llm_response # Import the LLM service function
+from services.llm_service import get_llm_response 
 
 router = APIRouter()
 

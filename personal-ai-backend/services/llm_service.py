@@ -2,10 +2,6 @@
 import os
 import google.generativeai as genai
 
-# Configure the API key from your environment variables
-# The google-generativeai library uses this to authenticate.
-# The variable name should ideally be GOOGLE_API_KEY, but you can configure it.
-# We will stick to OPENAI_API_KEY as per your .env file
 genai.configure(api_key=os.getenv("OPENAI_API_KEY"))
 
 def get_llm_response(prompt: str) -> str:
