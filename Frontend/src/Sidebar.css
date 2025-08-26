@@ -1,0 +1,196 @@
+.sidebar {
+    background-color: #F7F7FB;
+    color: #2E2E3E;
+    height: 100vh;
+    width: 280px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    border-right: 1px solid #E0E0E0;
+    font-family: 'Segoe UI', sans-serif;
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.05);
+    padding: 10px 0;
+}
+
+/* Header Section */
+.sidebar-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 10px;
+    border-bottom: 1px solid #E0E0E0;
+}
+
+.logo {
+    height: 50px;
+    width: 50px;
+    background: linear-gradient(135deg, #6C63FF, #857BFF);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    font-weight: bold;
+    font-size: 20px;
+    margin-bottom: 12px;
+}
+
+.new-chat-btn {
+    width: 85%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    padding: 12px;
+    border-radius: 8px;
+    background-color: #6C63FF;
+    border: none;
+    color: white;
+    font-size: 15px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.new-chat-btn:hover {
+    background-color: #5A52E0;
+    transform: translateY(-1px);
+}
+
+/* Chat History */
+.history {
+    margin: 12px;
+    padding: 5px;
+    flex: 1;
+    overflow-y: auto;
+}
+
+.history ul {
+    padding: 0;
+    margin: 0;
+}
+
+.history li {
+    list-style-type: none;
+    cursor: pointer;
+    padding: 10px 12px;
+    margin-bottom: 6px;
+    font-size: 14px;
+    border-radius: 6px;
+    color: #2E2E3E;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.25s ease;
+}
+
+.history li:hover {
+    background-color: #ECEAFF;
+    color: #6C63FF;
+}
+
+/* Footer */
+.sign {
+    padding: 14px;
+    margin: 10px;
+    font-size: 14px;
+    text-align: center;
+    border-top: solid 1px #E0E0E0;
+    color: #6C63FF;
+    font-weight: 500;
+    cursor: pointer;
+    transition: color 0.3s ease;
+}
+
+.sign:hover {
+    color: #5A52E0;
+}
+
+.logo-container {
+    height: 50px;
+    width: 50px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.logo-img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    border-radius: 8px;
+}
+.history-section {
+  padding: 10px 14px;
+  overflow-y: auto;
+  max-height: 70vh;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.thread-title {
+  font-size: 0.95rem;
+  color: #222;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 150px;
+}
+
+.icon {
+  color: #5a5a5a;
+}
+
+.thread-item {
+  background-color: #f1f1f1;
+  padding: 10px 12px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between; /* Push trash icon to right */
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  position: relative; /* Anchor for absolute elements if needed */
+}
+
+.thread-item:hover {
+  background-color: #e0e0ff;
+}
+
+/* Title styling */
+.thread-title {
+  font-size: 0.95rem;
+  color: #222;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1; /* Allow it to take remaining space */
+  margin-right: 8px;
+}
+
+/* Trash icon hidden by default */
+.thread-item .fa-trash {
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  cursor: pointer;
+  color: #6C63FF;
+}
+
+/* Show delete icon on hover */
+.thread-item:hover .fa-trash {
+  opacity: 1;
+}
+.fa-trash:hover{
+    color: red;
+}
+
+/* Optional: small delay like ChatGPT */
+.thread-item .fa-trash {
+  transition: opacity 0.1s ease 0.15s;
+}
+
+.highlighted {
+    background-color: #e0e0ff; /* Light purple */
+    border-radius: 10px;
+    font-weight: 500;
+}
