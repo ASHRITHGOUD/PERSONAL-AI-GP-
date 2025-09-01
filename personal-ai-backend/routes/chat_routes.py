@@ -1,9 +1,11 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect
+from services.llm_service import get_llm_response
 from services.redis_service import store_message, get_messages
 from services.mongo_services import save_to_ltm
 
 router = APIRouter(tags=["Chat"])
 
+# REST endpoint
 @router.post("/chat")
 async def chat(message: dict):
     """
@@ -30,3 +32,22 @@ async def chat(message: dict):
         "stored_message": user_input,
         "conversation": conversation
     }
+
+# WebSocket endpoint
+@router.websocket("/ws/chat")
+async def websocket_endpoint(websocket: WebSocket):
+    await websocket.accept()
+    try:
+        while True:
+            # 1. Receive the user's message
+            user_message = await websocket.receive_text()
+            print(f"User message: {user_message}")
+
+            # 2. Call the LLM service with the user's message
+            llm_response = get_llm_response(user_message)
+
+            # 3. Send the LLM's response back to the client
+            await websocket.send_text(llm_response)
+
+    except WebSocketDisconnect:
+        print("Client disconnected.")
