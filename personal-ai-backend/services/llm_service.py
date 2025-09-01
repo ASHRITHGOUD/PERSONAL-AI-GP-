@@ -1,14 +1,28 @@
-import openai
-from utils import config
+# services/llm_service.py
+import os
+import google.generativeai as genai
 
-openai.api_key = config.OPENAI_API_KEY
+# Configure the API key from your environment variables
+# The google-generativeai library uses this to authenticate.
+# The variable name should ideally be GOOGLE_API_KEY, but you can configure it.
+# We will stick to OPENAI_API_KEY as per your .env file
+genai.configure(api_key=os.getenv("OPENAI_API_KEY"))
 
-async def ask_llm(prompt: str) -> str:
+def get_llm_response(prompt: str) -> str:
+    """Sends a text prompt to the Gemini API and returns the AI's response."""
     try:
-        response = await openai.ChatCompletion.acreate(
-            model="gpt-3.5-turbo",
-            messages=[{"role": "user", "content": prompt}]
-        )
-        return response["choices"][0]["message"]["content"]
+        # Create a GenerativeModel instance
+        model = genai.GenerativeModel('gemini-pro')
+        
+        # Call the generate_content method to get a response
+        response = model.generate_content(prompt)
+        
+        # Check if the response contains text and return it
+        if response.text:
+            return response.text
+        else:
+            return "No text response generated."
+            
     except Exception as e:
-        return f"Error: {str(e)}"
+        print(f"An error occurred with the Gemini API: {e}")
+        return "Sorry, I am unable to generate a response right now."

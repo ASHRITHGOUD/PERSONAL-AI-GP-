@@ -30,3 +30,26 @@ async def chat(message: dict):
         "stored_message": user_input,
         "conversation": conversation
     }
+# routes/chat_routes.py
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect
+from services.llm_service import get_llm_response # Import the LLM service function
+
+router = APIRouter()
+
+@router.websocket("/ws/chat")
+async def websocket_endpoint(websocket: WebSocket):
+    await websocket.accept()
+    try:
+        while True:
+            # 1. Receive the user's message
+            user_message = await websocket.receive_text()
+            print(f"User message: {user_message}")
+            
+            # 2. Call the LLM service with the user's message
+            llm_response = get_llm_response(user_message)
+            
+            # 3. Send the LLM's response back to the client
+            await websocket.send_text(llm_response)
+            
+    except WebSocketDisconnect:
+        print("Client disconnected.")
