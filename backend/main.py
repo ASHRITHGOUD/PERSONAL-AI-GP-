@@ -1,47 +1,24 @@
-import json
-from fastapi import FastAPI, WebSocket
+# backend/main.py
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from backend.tasks import set_reminder, add_note, get_notes, get_weather, web_search, send_email, calculate
-from backend.llm_handler import ask_gemini
-from backend import auth
-from backend.dialogue_manager import DialogueManager
-from backend.schemas import DialogueRequest, DialogueResponse
+# --- FINAL CORRECTED IMPORTS ---
+# Use relative imports: .routes.auth means look in the 'routes' folder for the 'auth.py' file.
+from .routes.auth import router as auth_router
+from .routes.chat_routes import router as chat_router
+
 app = FastAPI()
-dm = DialogueManager()
 
 # --- Enable CORS ---
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],  # ✅ restrict to your frontend
+    allow_origins=["http://localhost:5173"], 
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# --- Auth Routes ---
-app.include_router(auth.router)
-
-# --- REST API for Dialogue ---
-@app.post("/chat", response_model=DialogueResponse)
-async def chat(request: DialogueRequest):
-    reply = await dm.handle_message(request.user_id, request.text)
-    return DialogueResponse(user_id=request.user_id, response=reply)
-
-# --- WebSocket for Dialogue ---
-@app.websocket("/ws")
-async def websocket_endpoint(ws: WebSocket):
-    await ws.accept()
-    while True:
-        data = await ws.receive_text()
-        try:
-            data_json = json.loads(data)
-            user_id = data_json.get("user_id", "guest")
-            msg = data_json.get("text", "")
-        except Exception:
-            user_id, msg = "guest", data
-
-        reply = await dm.handle_message(user_id, msg)
-        
-        # ✅ Send only text reply (frontend-safe)
-        await ws.send_text(reply)
+# --- Include Routers ---
+# Include the router objects directly (router is the APIRouter instance from the files)
+app.include_router(auth_router)
+app.include_router(chat_router)

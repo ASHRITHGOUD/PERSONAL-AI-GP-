@@ -1,24 +1,31 @@
-import os
+# backend/tasks/workers/utility_worker.py
 import smtplib
 import math
 import requests
 from datetime import datetime, timedelta
 import redis
 from email.mime.text import MIMEText
-from .celery_app import celery_app
-from dotenv import load_dotenv
+from ...config import REDIS_URL, OPENWEATHER_API_KEY, EMAIL_USER, EMAIL_PASS 
+from ..celery_app import celery_app 
 
-load_dotenv()
+# --- Global Redis State ---
+_redis_client = None
 
-# Redis connection
-# Redis connection (use Cloud URL)
-REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
-r = redis.Redis.from_url(REDIS_URL, decode_responses=True)
-
+def get_redis_client():
+    """Initializes and returns the Redis client, ensuring it's only done once."""
+    global _redis_client
+    if _redis_client is None:
+        try:
+            _redis_client = redis.Redis.from_url(REDIS_URL, decode_responses=True)
+        except Exception as e:
+            print(f"FATAL Redis Connection Error in utility_worker: {e}")
+            raise e
+    return _redis_client
 
 # -------------------- Reminder --------------------
 @celery_app.task(name="tasks.set_reminder")
 def set_reminder(message: str, minutes: int, user_id="default"):
+    r = get_redis_client()
     trigger_time = datetime.now() + timedelta(minutes=minutes)
     reminder_id = f"reminder:{user_id}:{trigger_time.timestamp()}"
     r.hset(reminder_id, mapping={"time": trigger_time.isoformat(), "message": message})
@@ -27,6 +34,7 @@ def set_reminder(message: str, minutes: int, user_id="default"):
 
 @celery_app.task(name="tasks.check_reminders")
 def check_reminders(user_id="default"):
+    r = get_redis_client()
     keys = r.keys(f"reminder:{user_id}:*")
     now = datetime.now()
     due = []
@@ -43,12 +51,14 @@ def check_reminders(user_id="default"):
 # -------------------- Notes --------------------
 @celery_app.task(name="tasks.add_note")
 def add_note(note: str, user_id="default"):
+    r = get_redis_client()
     note_id = f"note:{user_id}:{datetime.now().timestamp()}"
     r.set(note_id, note)
     return f"📝 Note saved: {note}"
 
 @celery_app.task(name="tasks.get_notes")
 def get_notes(user_id="default"):
+    r = get_redis_client() # <-- The function failing to import
     keys = r.keys(f"note:{user_id}:*")
     notes = [r.get(k) for k in keys]
     if not notes:
@@ -58,7 +68,8 @@ def get_notes(user_id="default"):
 # -------------------- Weather --------------------
 @celery_app.task(name="tasks.get_weather")
 def get_weather(city: str):
-    api_key = os.getenv("OPENWEATHER_API_KEY")
+    # Use config variable directly
+    api_key = OPENWEATHER_API_KEY
     url = f"http://api.openweathermap.org/data/2.5/weather?q={city}&appid={api_key}&units=metric"
     res = requests.get(url).json()
     if res.get("cod") != 200:
@@ -78,8 +89,9 @@ def web_search(query: str):
 # -------------------- Email --------------------
 @celery_app.task(name="tasks.send_email")
 def send_email(to_email: str, subject: str, body: str):
-    from_email = os.getenv("EMAIL_USER")
-    password = os.getenv("EMAIL_PASS")
+    # Use config variables directly
+    from_email = EMAIL_USER
+    password = EMAIL_PASS
     msg = MIMEText(body)
     msg["Subject"] = subject
     msg["From"] = from_email
@@ -97,6 +109,7 @@ def send_email(to_email: str, subject: str, body: str):
 @celery_app.task(name="tasks.calculate")
 def calculate(expression: str):
     try:
+        # NOTE: eval is dangerous, but keeping original logic
         result = eval(expression, {"__builtins__": None, "math": math})
         return f"🧮 {expression} = {result}"
     except Exception:
