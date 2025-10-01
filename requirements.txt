@@ -1,0 +1,13 @@
+fastapi
+uvicorn
+requests
+redis
+motor
+pymongo
+celery
+python-dotenv
+google-generativeai
+python-jose[cryptography]
+passlib[bcrypt]
+python-multipart
+pydantic

@@ -1,39 +1,43 @@
 from datetime import datetime, timedelta
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 from passlib.context import CryptContext
-from bson import ObjectId
+from bson.objectid import ObjectId
 import os
 from dotenv import load_dotenv
+from pydantic import BaseModel, constr
 
 from .database import users_collection
-from .schemas import UserCreate, UserLogin, UserResponse, Token   # ✅ fixed import
+from .schemas import UserCreate, UserLogin, UserResponse, Token
 
+# --- Load environment variables ---
 load_dotenv()
-
-SECRET_KEY = os.getenv("SECRET_KEY")
+SECRET_KEY = os.getenv("SECRET_KEY", "supersecretkey")
 ALGORITHM = os.getenv("ALGORITHM", "HS256")
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", 30))
 
+# --- Security utilities ---
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
-
 router = APIRouter(prefix="/auth", tags=["auth"])
 
-# --- Helpers ---
-def verify_password(plain, hashed):
-    return pwd_context.verify(plain, hashed)
+# --- Password hashing ---
+def hash_password(password: str) -> str:
+    # Always pass string to Passlib (truncate to 72 chars for bcrypt)
+    return pwd_context.hash(password[:72])
 
-def hash_password(password):
-    return pwd_context.hash(password)
+def verify_password(plain: str, hashed: str) -> bool:
+    return pwd_context.verify(plain[:72], hashed)
 
-def create_access_token(data: dict, expires_delta: timedelta = None):
+# --- JWT token ---
+def create_access_token(data: dict, expires_delta: timedelta = None) -> str:
     to_encode = data.copy()
     expire = datetime.utcnow() + (expires_delta or timedelta(minutes=15))
     to_encode.update({"exp": expire})
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
+# --- Database helpers ---
 async def get_user_by_username(username: str):
     return await users_collection.find_one({"username": username})
 
@@ -80,3 +84,12 @@ async def get_me(token: str = Depends(oauth2_scheme)):
         raise HTTPException(status_code=404, detail="User not found")
     
     return {"id": str(user["_id"]), "username": user["username"]}
+
+# --- Optional: enforce password length via Pydantic ---
+class UserCreate(BaseModel):
+    username: str
+    password: constr(min_length=4, max_length=72)
+
+class UserLogin(BaseModel):
+    username: str
+    password: str
